@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { parseTimeSignature, parsePattern, buildGrid } from '$lib/rhythm';
+	import { parseTimeSignature, parsePattern, buildGrid, pickSubdivisions } from '$lib/rhythm';
 	import RhythmBar from '$lib/RhythmBar.svelte';
 	import NotationBar from '$lib/NotationBar.svelte';
 
@@ -9,14 +9,24 @@
 
 	const timeSig = $derived(parseTimeSignature(timeSigInput));
 
-	function analyze(pattern: string) {
-		if (!timeSig) return null;
-		const parsed = parsePattern(pattern, timeSig);
-		return { parsed, grid: buildGrid(timeSig, parsed.notes) };
-	}
+	const rightParsed = $derived(timeSig ? parsePattern(rightInput, timeSig) : null);
+	const leftParsed = $derived(timeSig ? parsePattern(leftInput, timeSig) : null);
 
-	const right = $derived(analyze(rightInput));
-	const left = $derived(analyze(leftInput));
+	// Shared subdivision so both hands' squares are divided the same way.
+	const subdivisions = $derived(
+		pickSubdivisions([...(rightParsed?.notes ?? []), ...(leftParsed?.notes ?? [])])
+	);
+
+	const right = $derived(
+		timeSig && rightParsed
+			? { parsed: rightParsed, grid: buildGrid(timeSig, rightParsed.notes, subdivisions) }
+			: null
+	);
+	const left = $derived(
+		timeSig && leftParsed
+			? { parsed: leftParsed, grid: buildGrid(timeSig, leftParsed.notes, subdivisions) }
+			: null
+	);
 </script>
 
 <main class="mx-auto max-w-3xl px-6 pt-8 pb-16 text-neutral-900">

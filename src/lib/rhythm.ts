@@ -117,7 +117,8 @@ export function parsePattern(input: string, ts: TimeSignature): ParsedPattern {
 }
 
 // Smallest number of subdivisions per beat that snaps every note start/end onto the grid.
-function pickSubdivisions(notes: Note[]): number {
+// Pass notes from several patterns together to get a shared subdivision for aligned bars.
+export function pickSubdivisions(notes: Note[]): number {
 	const candidates = [1, 2, 3, 4, 6, 8, 12, 16];
 	const points: number[] = [];
 	for (const n of notes) {
@@ -129,8 +130,11 @@ function pickSubdivisions(notes: Note[]): number {
 	return 16;
 }
 
-export function buildGrid(ts: TimeSignature, notes: Note[]): RhythmGrid {
-	const subdivisions = pickSubdivisions(notes);
+export function buildGrid(
+	ts: TimeSignature,
+	notes: Note[],
+	subdivisions: number = pickSubdivisions(notes)
+): RhythmGrid {
 	const totalSlots = ts.beats * subdivisions;
 	const slots: SlotState[] = new Array(totalSlots).fill('rest');
 

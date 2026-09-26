@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseTimeSignature, parsePattern, buildGrid, groupForNotation } from './rhythm';
+import { parseTimeSignature, parsePattern, buildGrid, groupForNotation, pickSubdivisions } from './rhythm';
 import { beamGlyphs } from './smufl';
 
 const ts44 = { beats: 4, unit: 4 };
@@ -84,6 +84,26 @@ describe('parsePattern — rests', () => {
 	it('a rest breaks a beam group', () => {
 		const items = groupForNotation(parsePattern('8 r8 8', ts44).notes);
 		expect(items.map((i) => i.kind)).toEqual(['single', 'single', 'single']);
+	});
+});
+
+describe('shared subdivision between hands', () => {
+	const notes = (p: string) => parsePattern(p, ts44).notes;
+
+	it('picks the finer subdivision across combined notes', () => {
+		expect(pickSubdivisions(notes('4444'))).toBe(1);
+		expect(pickSubdivisions(notes('884'))).toBe(2);
+		// right needs 2, left needs 1 -> shared is 2
+		expect(pickSubdivisions([...notes('884'), ...notes('4444')])).toBe(2);
+	});
+
+	it('a coarse hand adopts the shared subdivision so squares align', () => {
+		const shared = pickSubdivisions([...notes('884'), ...notes('4444')]);
+		const grid = buildGrid(ts44, notes('4444'), shared);
+		expect(grid.subdivisions).toBe(2);
+		expect(grid.slots.length).toBe(8);
+		// each quarter becomes onset + sustain within its beat
+		expect(grid.slots.slice(0, 2)).toEqual(['onset', 'sustain']);
 	});
 });
 
