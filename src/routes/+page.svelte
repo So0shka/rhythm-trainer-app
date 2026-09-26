@@ -1,14 +1,18 @@
 <script lang="ts">
-	import { parseTimeSignature, parsePattern, buildGrid, pickSubdivisions } from '$lib/rhythm';
+	import { parsePattern, buildGrid, pickSubdivisions } from '$lib/rhythm';
 	import { Metronome } from '$lib/metronome';
 	import RhythmBar from '$lib/RhythmBar.svelte';
 	import NotationBar from '$lib/NotationBar.svelte';
 
-	let timeSigInput = $state('4/4');
+	const numerators = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+	const denominators = [1, 2, 4, 8, 16];
+
+	let numerator = $state(4);
+	let denominator = $state(4);
 	let rightInput = $state('2+4');
 	let leftInput = $state('22');
 
-	const timeSig = $derived(parseTimeSignature(timeSigInput));
+	const timeSig = $derived({ beats: numerator, unit: denominator });
 
 	const rightParsed = $derived(timeSig ? parsePattern(rightInput, timeSig) : null);
 	const leftParsed = $derived(timeSig ? parsePattern(leftInput, timeSig) : null);
@@ -88,17 +92,28 @@
 	<h1 class="mb-6 text-2xl font-bold">Rhythm Trainer</h1>
 
 	<section class="mb-10 flex flex-wrap gap-5">
-		<label class="flex flex-col gap-1.5">
+		<div class="flex flex-col gap-1.5">
 			<span class="text-sm font-semibold text-neutral-600">Time signature</span>
-			<input
-				bind:value={timeSigInput}
-				placeholder="4/4"
-				class="w-20 rounded-md border border-neutral-300 px-3 py-2 focus:border-neutral-900 focus:outline-none"
-			/>
-			{#if !timeSig}
-				<small class="text-red-700">Enter a time signature, e.g. 4/4</small>
-			{/if}
-		</label>
+			<div class="flex items-center gap-1.5">
+				<select
+					bind:value={numerator}
+					class="rounded-md border border-neutral-300 px-2 py-2 focus:border-neutral-900 focus:outline-none"
+				>
+					{#each numerators as n (n)}
+						<option value={n}>{n}</option>
+					{/each}
+				</select>
+				<span class="text-neutral-500">/</span>
+				<select
+					bind:value={denominator}
+					class="rounded-md border border-neutral-300 px-2 py-2 focus:border-neutral-900 focus:outline-none"
+				>
+					{#each denominators as d (d)}
+						<option value={d}>{d}</option>
+					{/each}
+				</select>
+			</div>
+		</div>
 
 		<label class="flex flex-col gap-1.5">
 			<span class="text-sm font-semibold text-neutral-600">Right hand</span>
@@ -113,7 +128,7 @@
 				<small class="text-yellow-700">{right.parsed.warning}</small>
 			{/if}
 			{#if right}
-				<div class="mt-1 flex h-10 items-end overflow-x-auto overflow-y-hidden">
+				<div class="mt-5 flex h-10 items-end">
 					<NotationBar notes={right.parsed.notes} />
 				</div>
 			{/if}
@@ -132,7 +147,7 @@
 				<small class="text-yellow-700">{left.parsed.warning}</small>
 			{/if}
 			{#if left}
-				<div class="mt-1 flex h-10 items-end overflow-x-auto overflow-y-hidden">
+				<div class="mt-5 flex h-10 items-end">
 					<NotationBar notes={left.parsed.notes} />
 				</div>
 			{/if}
