@@ -1,6 +1,18 @@
 @import 'tailwindcss';
 
+@font-face {
+	font-family: 'Bravura';
+	src: url('/fonts/Bravura.woff2') format('woff2');
+	font-display: block;
+}
+
 body {
 	@apply bg-neutral-50;
 	font-family: system-ui, -apple-system, sans-serif;
+}
+
+.smufl {
+	font-family: 'Bravura';
+	line-height: 1;
+	font-feature-settings: 'liga' 0;
 }

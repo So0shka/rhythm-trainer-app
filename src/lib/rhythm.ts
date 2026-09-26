@@ -134,3 +134,41 @@ export function buildGrid(ts: TimeSignature, notes: Note[]): RhythmGrid {
 function fmtBeats(n: number): string {
 	return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '');
 }
+
+export type NotationItem =
+	| { kind: 'single'; note: Note }
+	| { kind: 'beam'; value: number; notes: Note[] };
+
+// Groups notes for engraving: runs of two or more same-value flagged notes within
+// one beat are beamed together; everything else stands alone (with its own flag).
+export function groupForNotation(notes: Note[]): NotationItem[] {
+	const items: NotationItem[] = [];
+	let run: Note[] = [];
+
+	const flush = () => {
+		if (run.length === 0) return;
+		items.push(run.length === 1 ? { kind: 'single', note: run[0] } : { kind: 'beam', value: run[0].value, notes: run });
+		run = [];
+	};
+
+	for (const n of notes) {
+		const beamable = n.dots === 0 && (n.value === 8 || n.value === 16);
+		if (!beamable) {
+			flush();
+			items.push({ kind: 'single', note: n });
+			continue;
+		}
+		if (run.length) {
+			const prev = run[run.length - 1];
+			const sameBeat = Math.floor(prev.startBeat + EPS) === Math.floor(n.startBeat + EPS);
+			if (sameBeat && prev.value === n.value) {
+				run.push(n);
+				continue;
+			}
+		}
+		flush();
+		run = [n];
+	}
+	flush();
+	return items;
+}

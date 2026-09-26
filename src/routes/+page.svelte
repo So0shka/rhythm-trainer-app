@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { parseTimeSignature, parsePattern, buildGrid } from '$lib/rhythm';
 	import RhythmBar from '$lib/RhythmBar.svelte';
+	import NotationBar from '$lib/NotationBar.svelte';
 
 	let timeSigInput = $state('4/4');
 	let rightInput = $state('2+4');
@@ -64,13 +65,23 @@
 	</section>
 
 	{#if timeSig}
-		<section class="flex flex-col gap-6">
-			{#if right}
-				<RhythmBar grid={right.grid} label="Right" />
-			{/if}
-			{#if left}
-				<RhythmBar grid={left.grid} label="Left" />
-			{/if}
+		<section class="flex flex-col gap-10">
+			<div class="flex flex-col gap-6">
+				{#if right}
+					<RhythmBar grid={right.grid} label="Right" />
+				{/if}
+				{#if left}
+					<RhythmBar grid={left.grid} label="Left" />
+				{/if}
+			</div>
+			<div class="flex flex-col gap-6 border-t border-neutral-200 pt-8">
+				{#if right}
+					<NotationBar notes={right.parsed.notes} label="Right" />
+				{/if}
+				{#if left}
+					<NotationBar notes={left.parsed.notes} label="Left" />
+				{/if}
+			</div>
 		</section>
 	{/if}
 </main>

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseTimeSignature, parsePattern, buildGrid } from './rhythm';
+import { parseTimeSignature, parsePattern, buildGrid, groupForNotation } from './rhythm';
+import { beamGlyphs } from './smufl';
 
 const ts44 = { beats: 4, unit: 4 };
 
@@ -57,5 +58,54 @@ describe('parsePattern — other cases', () => {
 	});
 	it('leading "+" errors', () => {
 		expect(parsePattern('+2', ts44).error).toBeTruthy();
+	});
+});
+
+describe('groupForNotation — beaming', () => {
+	const group = (pattern: string, ts = ts44) => groupForNotation(parsePattern(pattern, ts).notes);
+
+	it('"8888" beams two eighths per beat', () => {
+		const items = group('8888');
+		expect(items.map((i) => i.kind)).toEqual(['beam', 'beam']);
+		expect(items.every((i) => i.kind === 'beam' && i.notes.length === 2)).toBe(true);
+	});
+
+	it('"4 8 8" — quarter alone, two eighths beamed', () => {
+		const items = group('488');
+		expect(items.map((i) => i.kind)).toEqual(['single', 'beam']);
+	});
+
+	it('a lone eighth is not beamed', () => {
+		const items = group('84'); // eighth then quarter (does not fill bar, but grouping still applies)
+		expect(items.map((i) => i.kind)).toEqual(['single', 'single']);
+	});
+
+	it('four sixteenths in one beat beam together', () => {
+		const items = group('161616164'); // 4x16 (one beat) + ... rest quarters
+		expect(items[0]).toMatchObject({ kind: 'beam', value: 16 });
+		expect(items[0].kind === 'beam' && items[0].notes.length).toBe(4);
+	});
+
+	it('non-flagged notes stay single', () => {
+		expect(group('22').map((i) => i.kind)).toEqual(['single', 'single']);
+	});
+
+	it('a dotted eighth is not beamed', () => {
+		expect(group('8+16').map((i) => i.kind)).toEqual(['single', 'single']);
+	});
+});
+
+describe('beamGlyphs — recipe', () => {
+	const BLACK = String.fromCodePoint(0xe1f0); // plain notehead (first note)
+	const CONT8 = String.fromCodePoint(0xe1f7); // 8th beam-continuation segment
+	const FRAC8 = String.fromCodePoint(0xe1f2); // fractional-beam notehead
+
+	it('a beam of N is BLACK + [CONT + FRAC] * (N-1)', () => {
+		expect(beamGlyphs(8, 2)).toBe(BLACK + CONT8 + FRAC8);
+		expect(beamGlyphs(8, 3)).toBe(BLACK + CONT8 + FRAC8 + CONT8 + FRAC8);
+	});
+
+	it('counts below 2 produce nothing (singles are drawn elsewhere)', () => {
+		expect(beamGlyphs(8, 1)).toBe('');
 	});
 });
