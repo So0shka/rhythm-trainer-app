@@ -1,5 +1,6 @@
 // Notation: a number is a note value (1 whole, 2 half, 4 quarter, 8, 16, 32).
 // A "+" after a note dots it ("2+" = dotted half = 3 beats in 4/4).
+// An "r" prefix makes it a rest of that value ("r4" = quarter rest, "r2+" = dotted half rest).
 
 export type TimeSignature = { beats: number; unit: number };
 
@@ -8,6 +9,7 @@ export type Note = {
 	dots: number;
 	durationBeats: number;
 	startBeat: number;
+	rest: boolean;
 };
 
 export type ParsedPattern = {
@@ -48,8 +50,9 @@ export function parsePattern(input: string, ts: TimeSignature): ParsedPattern {
 	const s = input.trim();
 	if (!s) return { notes, totalBeats: 0 };
 
-	const raw: { value: number; dots: number }[] = [];
+	const raw: { value: number; dots: number; rest: boolean }[] = [];
 	let error: string | undefined;
+	let pendingRest = false;
 	let i = 0;
 	while (i < s.length) {
 		const ch = s[i];
@@ -57,9 +60,18 @@ export function parsePattern(input: string, ts: TimeSignature): ParsedPattern {
 			i++;
 			continue;
 		}
+		if (ch === 'r' || ch === 'R') {
+			if (pendingRest) {
+				error = 'An "r" must be followed by a duration';
+				break;
+			}
+			pendingRest = true;
+			i++;
+			continue;
+		}
 		if (ch === '+') {
-			if (raw.length === 0) {
-				error = 'A "+" must follow a note';
+			if (pendingRest || raw.length === 0) {
+				error = 'A "+" must follow a note or rest';
 				break;
 			}
 			raw[raw.length - 1].dots++;
@@ -74,19 +86,21 @@ export function parsePattern(input: string, ts: TimeSignature): ParsedPattern {
 			}
 		}
 		if (!matched) {
-			error = `Unexpected character: "${ch}". Allowed: note values 1, 2, 4, 8, 16, 32 and "+".`;
+			error = `Unexpected character: "${ch}". Allowed: note values 1, 2, 4, 8, 16, 32, "+" and "r" (rest).`;
 			break;
 		}
-		raw.push({ value: parseInt(matched, 10), dots: 0 });
+		raw.push({ value: parseInt(matched, 10), dots: 0, rest: pendingRest });
+		pendingRest = false;
 		i += matched.length;
 	}
 
+	if (!error && pendingRest) error = 'An "r" must be followed by a duration';
 	if (error) return { notes, totalBeats: 0, error };
 
 	let start = 0;
 	for (const t of raw) {
 		const durationBeats = (ts.unit / t.value) * dotFactor(t.dots);
-		notes.push({ value: t.value, dots: t.dots, durationBeats, startBeat: start });
+		notes.push({ value: t.value, dots: t.dots, durationBeats, startBeat: start, rest: t.rest });
 		start += durationBeats;
 	}
 
@@ -121,6 +135,7 @@ export function buildGrid(ts: TimeSignature, notes: Note[]): RhythmGrid {
 	const slots: SlotState[] = new Array(totalSlots).fill('rest');
 
 	for (const note of notes) {
+		if (note.rest) continue; // rests leave their slots empty
 		const startSlot = Math.round(note.startBeat * subdivisions);
 		const endSlot = Math.round((note.startBeat + note.durationBeats) * subdivisions);
 		for (let s = startSlot; s < endSlot && s < totalSlots; s++) {
@@ -152,7 +167,7 @@ export function groupForNotation(notes: Note[]): NotationItem[] {
 	};
 
 	for (const n of notes) {
-		const beamable = n.dots === 0 && (n.value === 8 || n.value === 16);
+		const beamable = !n.rest && n.dots === 0 && (n.value === 8 || n.value === 16);
 		if (!beamable) {
 			flush();
 			items.push({ kind: 'single', note: n });

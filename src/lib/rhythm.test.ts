@@ -61,6 +61,32 @@ describe('parsePattern — other cases', () => {
 	});
 });
 
+describe('parsePattern — rests', () => {
+	it('"r4" is a quarter rest (empty slots, no onset)', () => {
+		const { notes } = parsePattern('r4', ts44);
+		expect(notes[0]).toMatchObject({ value: 4, rest: true });
+		expect(onsets('r4').join('')).toBe('    ');
+	});
+	it('"4 r4 4 r4" onsets only on beats 1 and 3', () => {
+		expect(onsets('4 r4 4 r4').join('')).toBe('* * ');
+	});
+	it('a dotted rest parses ("r2+" = 3 beats)', () => {
+		const { notes } = parsePattern('r2+', ts44);
+		expect(notes[0]).toMatchObject({ value: 2, dots: 1, rest: true });
+		expect(notes[0].durationBeats).toBeCloseTo(3);
+	});
+	it('a lone "r" errors', () => {
+		expect(parsePattern('r', ts44).error).toBeTruthy();
+	});
+	it('"rr4" errors', () => {
+		expect(parsePattern('rr4', ts44).error).toBeTruthy();
+	});
+	it('a rest breaks a beam group', () => {
+		const items = groupForNotation(parsePattern('8 r8 8', ts44).notes);
+		expect(items.map((i) => i.kind)).toEqual(['single', 'single', 'single']);
+	});
+});
+
 describe('groupForNotation — beaming', () => {
 	const group = (pattern: string, ts = ts44) => groupForNotation(parsePattern(pattern, ts).notes);
 

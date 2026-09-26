@@ -26,10 +26,24 @@ const BEAM_FRAC: Record<number, number> = {
 	16: 0xe1f4 // textBlackNoteFrac16thShortStem
 };
 
+const REST_CODEPOINT: Record<number, number> = {
+	1: 0xe4e3, // restWhole
+	2: 0xe4e4, // restHalf
+	4: 0xe4e5, // restQuarter
+	8: 0xe4e6, // rest8th
+	16: 0xe4e7, // rest16th
+	32: 0xe4e8 // rest32nd
+};
+
 const AUGMENTATION_DOT = 0xe1e7;
 
 export function noteGlyph(value: number): string {
 	const cp = NOTE_CODEPOINT[value];
+	return cp === undefined ? '' : String.fromCodePoint(cp);
+}
+
+export function restGlyph(value: number): string {
+	const cp = REST_CODEPOINT[value];
 	return cp === undefined ? '' : String.fromCodePoint(cp);
 }
 
