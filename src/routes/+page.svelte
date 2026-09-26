@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { parseTimeSignature, parsePattern, buildGrid, pickSubdivisions } from '$lib/rhythm';
+	import { Metronome } from '$lib/metronome';
 	import RhythmBar from '$lib/RhythmBar.svelte';
 	import NotationBar from '$lib/NotationBar.svelte';
 
@@ -31,29 +32,42 @@
 	// Transport / playback
 	let bpm = $state(90);
 	let playing = $state(false);
+	let metronome = $state(true);
 	let positionBeats = $state(0);
 	let raf = 0;
 	let lastT = 0;
+	let lastBeat = -1;
+	const metro = new Metronome();
 
 	function frame(t: number) {
 		if (!playing) return;
 		const beats = timeSig?.beats ?? 4;
 		if (lastT) positionBeats = (positionBeats + ((t - lastT) / 1000) * (bpm / 60)) % beats;
 		lastT = t;
+		const cur = Math.floor(positionBeats);
+		if (cur !== lastBeat) {
+			if (metronome) metro.click(cur === 0);
+			lastBeat = cur;
+		}
 		raf = requestAnimationFrame(frame);
 	}
 
 	function toggle() {
 		playing = !playing;
 		if (playing) {
+			metro.resume();
 			lastT = 0;
+			lastBeat = -1;
 			raf = requestAnimationFrame(frame);
 		} else {
 			cancelAnimationFrame(raf);
 		}
 	}
 
-	$effect(() => () => cancelAnimationFrame(raf));
+	$effect(() => () => {
+		cancelAnimationFrame(raf);
+		metro.close();
+	});
 
 	const position = $derived(playing ? positionBeats : null);
 
@@ -137,6 +151,10 @@
 				<span class="text-sm font-semibold text-neutral-600">Tempo</span>
 				<input type="range" min="40" max="240" step="5" bind:value={bpm} class="w-40" />
 				<span class="w-16 text-sm tabular-nums text-neutral-700">{bpm} BPM</span>
+			</label>
+			<label class="flex items-center gap-2">
+				<input type="checkbox" bind:checked={metronome} />
+				<span class="text-sm font-semibold text-neutral-600">Metronome</span>
 			</label>
 		</section>
 
