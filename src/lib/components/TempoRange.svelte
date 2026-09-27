@@ -12,8 +12,8 @@
 	} = $props();
 </script>
 
-<div class="flex items-center gap-3">
-	<span class="text-sm font-semibold text-neutral-600">Tempo</span>
-	<input type="range" {min} {max} {step} bind:value={bpm} class="w-56" />
-	<span class="w-16 text-sm tabular-nums text-neutral-700">{bpm} BPM</span>
+<div class="flex w-full max-w-sm items-center gap-3">
+	<span class="shrink-0 text-sm font-semibold text-neutral-600">Tempo</span>
+	<input type="range" {min} {max} {step} bind:value={bpm} class="min-w-0 flex-1" />
+	<span class="w-16 shrink-0 text-sm tabular-nums text-neutral-700">{bpm} BPM</span>
 </div>

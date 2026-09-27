@@ -84,7 +84,7 @@
 	const position = $derived(playing ? positionBeats : null);
 </script>
 
-<main class="mx-auto max-w-3xl px-6 pt-6 pb-16 text-neutral-900">
+<main class="mx-auto max-w-3xl px-6 pt-6 pb-16 text-neutral-900 sm:px-8">
 	<div class="mb-6 flex items-center justify-center gap-2">
 		<h1 class="text-2xl font-bold uppercase">Rhythm Trainer</h1>
 		<ShareButton />
@@ -129,7 +129,7 @@
 
 		<button
 			onclick={toggle}
-			class="w-40 rounded-lg bg-neutral-900 px-8 py-3 text-lg font-semibold text-white hover:bg-neutral-700"
+			class="max-w-40 grow basis-0 rounded-lg bg-neutral-900 px-6 py-3 text-lg font-semibold text-white hover:bg-neutral-700"
 		>
 			{playing ? 'Pause' : 'Play'}
 		</button>
