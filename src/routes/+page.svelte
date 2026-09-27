@@ -5,6 +5,8 @@
 	import NoteInput from '$lib/components/NoteInput.svelte';
 	import MuteButton from '$lib/components/MuteButton.svelte';
 	import MonochromeButton from '$lib/components/MonochromeButton.svelte';
+	import PlayheadButton from '$lib/components/PlayheadButton.svelte';
+	import BubbleButton from '$lib/components/BubbleButton.svelte';
 	import SelectBox from '$lib/components/SelectBox.svelte';
 	import TempoRange from '$lib/components/TempoRange.svelte';
 	import PlayHead from '$lib/components/PlayHead.svelte';
@@ -39,6 +41,8 @@
 	let playing = $state(false);
 	let metronome = $state(true);
 	let monochrome = $state(false);
+	let playhead = $state(true);
+	let bubble = $state(false);
 	let positionBeats = $state(0);
 	let raf = 0;
 	let lastT = 0;
@@ -102,9 +106,11 @@
 
 	<!-- Rhythm bars (middle), centered on the page -->
 	<section class="relative mx-auto flex w-fit flex-col gap-6">
-		<PlayHead {position} />
-		<RhythmBar grid={right.grid} label="R" accent="blue" {position} {monochrome} />
-		<RhythmBar grid={left.grid} label="L" accent="green" {position} {monochrome} />
+		{#if playhead}
+			<PlayHead {position} />
+		{/if}
+		<RhythmBar grid={right.grid} label="R" accent="blue" {position} {monochrome} {bubble} />
+		<RhythmBar grid={left.grid} label="L" accent="green" {position} {monochrome} {bubble} />
 	</section>
 
 	<!-- Tempo -->
@@ -114,7 +120,8 @@
 
 	<!-- Play + mute (bottom, one row) -->
 	<section class="mt-6 flex items-center justify-center gap-3">
-		<MonochromeButton bind:on={monochrome} />
+		<PlayheadButton bind:on={playhead} />
+		<BubbleButton bind:on={bubble} />
 
 		<button
 			onclick={toggle}
@@ -123,6 +130,7 @@
 			{playing ? 'Pause' : 'Play'}
 		</button>
 
+		<MonochromeButton bind:on={monochrome} />
 		<MuteButton bind:on={metronome} />
 	</section>
 </main>
