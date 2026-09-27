@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { parsePattern, buildGrid, pickSubdivisions } from '$lib/core/rhythm';
 	import { Metronome } from '$lib/core/metronome';
+	import { themes } from '$lib/core/theme';
 	import RhythmBar from '$lib/components/RhythmBar.svelte';
 	import NoteInput from '$lib/components/NoteInput.svelte';
 	import MuteButton from '$lib/components/MuteButton.svelte';
@@ -43,6 +44,8 @@
 	let monochrome = $state(false);
 	let playhead = $state(true);
 	let bubble = $state(false);
+
+	const theme = $derived(monochrome ? themes.mono : themes.color);
 	let positionBeats = $state(0);
 	let raf = 0;
 	let lastT = 0;
@@ -109,8 +112,8 @@
 		{#if playhead}
 			<PlayHead {position} />
 		{/if}
-		<RhythmBar grid={right.grid} label="R" accent="blue" {position} {monochrome} {bubble} />
-		<RhythmBar grid={left.grid} label="L" accent="green" {position} {monochrome} {bubble} />
+		<RhythmBar grid={right.grid} label="R" colors={theme.right} {position} {bubble} />
+		<RhythmBar grid={left.grid} label="L" colors={theme.left} {position} {bubble} />
 	</section>
 
 	<!-- Tempo -->
