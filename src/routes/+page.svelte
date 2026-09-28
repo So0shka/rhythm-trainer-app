@@ -13,6 +13,7 @@
 	import TempoRange from '$lib/components/TempoRange.svelte';
 	import PlayHead from '$lib/components/PlayHead.svelte';
 	import ShareButton from '$lib/components/ShareButton.svelte';
+	import InstallButton from '$lib/components/InstallButton.svelte';
 
 	// Rhythm parameters, read from and synced to the URL.
 	const params = new RhythmParams();
@@ -136,5 +137,9 @@
 
 		<MonochromeButton bind:on={monochrome} />
 		<MuteButton bind:on={metronome} />
+	</section>
+
+	<section class="mt-4 flex justify-center">
+		<InstallButton />
 	</section>
 </main>

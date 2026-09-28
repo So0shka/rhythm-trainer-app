@@ -39,6 +39,17 @@
 			font-display: block;
 		}
 	</style>
+	<script>
+		// Capture Chrome's install prompt as early as possible: it can fire before
+		// the app's JS mounts, and a missed event is gone for good. The InstallButton
+		// component reads this back on mount.
+		window.addEventListener('beforeinstallprompt', function (e) {
+			e.preventDefault();
+			window.deferredInstallPrompt = e;
+			window.dispatchEvent(new Event('installpromptready'));
+		});
+	</script>
+
 	%sveltekit.head%
 </head>
 
